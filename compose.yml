@@ -1,0 +1,85 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: estacionamento-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: estacionamento
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d:Z
+
+  backend-dev:
+    profiles: ["dev"]
+    container_name: estacionamento-backend-dev
+    build:
+      context: ./backend
+      target: dev
+    environment:
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: estacionamento
+      DB_USER: dev
+      DB_PASSWORD: dev123
+    volumes:
+      - ./backend:/app:Z
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+
+  frontend-dev:
+    profiles: ["dev"]
+    container_name: estacionamento-frontend-dev
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      API_BASE_URL: http://backend-dev:3000
+      EXPO_PUBLIC_API_BASE_URL: http://backend-dev:3000
+      EXPO_NO_TELEMETRY: "1"
+    volumes:
+      - ./frontend:/app:Z
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend-dev
+
+  backend-prod:
+    profiles: ["prod"]
+    container_name: estacionamento-backend
+    build:
+      context: ./backend
+      target: prod
+    environment:
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: estacionamento
+      DB_USER: dev
+      DB_PASSWORD: dev123
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+
+  frontend-prod:
+    profiles: ["prod"]
+    container_name: estacionamento-frontend
+    build:
+      context: ./frontend
+      target: prod
+      args:
+        EXPO_PUBLIC_API_BASE_URL: http://backend-prod:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend-prod
+
+volumes:
+  mysql_data:
