@@ -11,13 +11,13 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/init:/docker-entrypoint-initdb.d:Z
+      - ./database/init:/docker-entrypoint-initdb.d
 
   backend-dev:
     profiles: ["dev"]
     container_name: estacionamento-backend-dev
     build:
-      context: ./backend
+      context: ./estacionamento-backend-mobile2
       target: dev
     environment:
       PORT: 3000
@@ -27,7 +27,8 @@ services:
       DB_USER: dev
       DB_PASSWORD: dev123
     volumes:
-      - ./backend:/app:Z
+      - ./estacionamento-backend-mobile2:/app
+      - /app/node_modules
     ports:
       - "3000:3000"
     depends_on:
@@ -37,14 +38,15 @@ services:
     profiles: ["dev"]
     container_name: estacionamento-frontend-dev
     build:
-      context: ./frontend
+      context: ./estacionamento-frontend-mobile2
       target: dev
     environment:
       API_BASE_URL: http://backend-dev:3000
       EXPO_PUBLIC_API_BASE_URL: http://backend-dev:3000
       EXPO_NO_TELEMETRY: "1"
     volumes:
-      - ./frontend:/app:Z
+      - ./estacionamento-frontend-mobile2:/app
+      - /app/node_modules
     ports:
       - "8081:8081"
     depends_on:
@@ -54,7 +56,7 @@ services:
     profiles: ["prod"]
     container_name: estacionamento-backend
     build:
-      context: ./backend
+      context: ./estacionamento-backend-mobile2
       target: prod
     environment:
       PORT: 3000
@@ -72,10 +74,10 @@ services:
     profiles: ["prod"]
     container_name: estacionamento-frontend
     build:
-      context: ./frontend
+      context: ./estacionamento-frontend-mobile2
       target: prod
       args:
-        EXPO_PUBLIC_API_BASE_URL: http://backend-prod:3000
+        EXPO_PUBLIC_API_BASE_URL: http://10.1.0.4:3000
     ports:
       - "8080:80"
     depends_on:
